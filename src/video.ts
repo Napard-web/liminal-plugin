@@ -44,7 +44,7 @@ export async function recupererTranscription(url: string): Promise<string> {
     body: JSON.stringify({ videoId, context: INNERTUBE_CONTEXT }),
   });
 
-  const playerData = playerResp.json as PlayerResponse;
+  const playerData = JSON.parse(playerResp.text) as PlayerResponse;
   const tracks: CaptionTrack[] =
     playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
 
@@ -65,15 +65,14 @@ export async function recupererTranscription(url: string): Promise<string> {
   if (!segments.length) throw new Error("Transcription vide.");
 
   return segments
-    .map((m) =>
-      m[1]
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#39;/g, "'")
-        .replace(/&quot;/g, '"')
-        .replace(/<[^>]+>/g, "")
-        .trim()
+    .map((m) => (m[1] ?? "")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/<[^>]+>/g, "")
+      .trim()
     )
     .filter(Boolean)
     .join(" ");
