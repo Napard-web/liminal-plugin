@@ -5,6 +5,14 @@ interface CaptionTrack {
   baseUrl: string;
 }
 
+interface PlayerResponse {
+  captions?: {
+    playerCaptionsTracklistRenderer?: {
+      captionTracks?: CaptionTrack[];
+    };
+  };
+}
+
 export function extraireVideoId(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -36,9 +44,9 @@ export async function recupererTranscription(url: string): Promise<string> {
     body: JSON.stringify({ videoId, context: INNERTUBE_CONTEXT }),
   });
 
-  const playerData = playerResp.json;
+  const playerData = playerResp.json as PlayerResponse;
   const tracks: CaptionTrack[] =
-    (playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks as CaptionTrack[]) ?? [];
+    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
 
   if (!tracks.length) throw new Error("Aucun sous-titre disponible pour cette vidéo.");
 
