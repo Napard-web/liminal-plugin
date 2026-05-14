@@ -114,10 +114,11 @@ export default class LiminalPlugin extends Plugin {
     const notesExistantes = new Set(
       this.app.vault.getMarkdownFiles().map((f) => f.basename.toLowerCase())
     );
-    return contenu.replace(/\[\[([^\]]+)\]\]/g, (match: string) => {
-      const nom = match.slice(2, -2).trim();
-      return notesExistantes.has(nom.toLowerCase()) ? `[[${nom}]]` : "";
-    });
+    return contenu.split(/(\[\[[^\]]+\]\])/).map((part) => {
+      if (!part.startsWith("[[")) return part;
+      const nom = part.slice(2, -2).trim();
+      return notesExistantes.has(nom.toLowerCase()) ? part : "";
+    }).join("");
   }
 
   private verifierApiKey(): boolean {
