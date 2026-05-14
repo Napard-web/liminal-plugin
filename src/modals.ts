@@ -4,9 +4,9 @@ export class TextInputModal extends Modal {
   private label: string;
   private placeholder: string;
   private multiline: boolean;
-  private onSubmit: (value: string) => void;
+  private onSubmit: (value: string) => void | Promise<void>;
 
-  constructor(app: App, label: string, placeholder: string, multiline: boolean, onSubmit: (value: string) => void) {
+  constructor(app: App, label: string, placeholder: string, multiline: boolean, onSubmit: (value: string) => void | Promise<void>) {
     super(app);
     this.label = label;
     this.placeholder = placeholder;
@@ -42,9 +42,9 @@ export class TextInputModal extends Modal {
 export class ConfirmModal extends Modal {
   private message: string;
   private titre: string;
-  private onConfirm: () => void;
+  private onConfirm: () => void | Promise<void>;
 
-  constructor(app: App, message: string, titre: string, onConfirm: () => void) {
+  constructor(app: App, message: string, titre: string, onConfirm: () => void | Promise<void>) {
     super(app);
     this.message = message;
     this.titre = titre;
@@ -104,9 +104,9 @@ export class ResultatsModal extends Modal {
 export class NotePreviewModal extends Modal {
   private contenu: string;
   private dossiers: string[];
-  private onSave: (contenu: string, dossier: string, nom: string) => void;
+  private onSave: (contenu: string, dossier: string, nom: string) => void | Promise<void>;
 
-  constructor(app: App, contenu: string, dossiers: string[], onSave: (contenu: string, dossier: string, nom: string) => void) {
+  constructor(app: App, contenu: string, dossiers: string[], onSave: (contenu: string, dossier: string, nom: string) => void | Promise<void>) {
     super(app);
     this.contenu = contenu;
     this.dossiers = dossiers;
@@ -146,9 +146,9 @@ export class NotePreviewModal extends Modal {
 
 export class TraiterNoteModal extends Modal {
   private resultat: string;
-  private onConfirm: () => void;
+  private onConfirm: () => void | Promise<void>;
 
-  constructor(app: App, resultat: string, onConfirm: () => void) {
+  constructor(app: App, resultat: string, onConfirm: () => void | Promise<void>) {
     super(app);
     this.resultat = resultat;
     this.onConfirm = onConfirm;
