@@ -1,5 +1,10 @@
 import { requestUrl } from "obsidian";
 
+interface CaptionTrack {
+  languageCode: string;
+  baseUrl: string;
+}
+
 export function extraireVideoId(url: string): string | null {
   try {
     const parsed = new URL(url);
@@ -32,15 +37,15 @@ export async function recupererTranscription(url: string): Promise<string> {
   });
 
   const playerData = playerResp.json;
-  const tracks: any[] =
-    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
+  const tracks: CaptionTrack[] =
+    (playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks as CaptionTrack[]) ?? [];
 
   if (!tracks.length) throw new Error("Aucun sous-titre disponible pour cette vidéo.");
 
   const track =
-    tracks.find((t: any) => t.languageCode === "fr") ??
-    tracks.find((t: any) => t.languageCode?.startsWith("fr")) ??
-    tracks.find((t: any) => t.languageCode === "en") ??
+    tracks.find((t) => t.languageCode === "fr") ??
+    tracks.find((t) => t.languageCode?.startsWith("fr")) ??
+    tracks.find((t) => t.languageCode === "en") ??
     tracks[0];
 
   if (!track?.baseUrl) throw new Error("URL de transcription introuvable.");
