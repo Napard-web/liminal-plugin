@@ -45,8 +45,8 @@ export async function recupererTranscription(url: string): Promise<string> {
   });
 
   const playerData = JSON.parse(playerResp.text) as unknown as PlayerResponse;
-  const tracks: CaptionTrack[] =
-    playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
+  const rawTracks: unknown = playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks;
+  const tracks: CaptionTrack[] = Array.isArray(rawTracks) ? (rawTracks as CaptionTrack[]) : [];
 
   if (!tracks.length) throw new Error("Aucun sous-titre disponible pour cette vidéo.");
 
