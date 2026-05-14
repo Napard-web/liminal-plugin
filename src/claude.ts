@@ -11,6 +11,15 @@ function estTransitoire(e: unknown): boolean {
   );
 }
 
+let clientCache: { apiKey: string; client: Anthropic } | null = null;
+
+function getClient(apiKey: string): Anthropic {
+  if (!clientCache || clientCache.apiKey !== apiKey) {
+    clientCache = { apiKey, client: new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) };
+  }
+  return clientCache.client;
+}
+
 export async function appelClaude(
   apiKey: string,
   model: string,
@@ -18,7 +27,7 @@ export async function appelClaude(
   maxTokens = 1024,
   maxEssais = 3
 ): Promise<string> {
-  const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+  const client = getClient(apiKey);
 
   let delai = 1000;
   for (let essai = 1; essai <= maxEssais; essai++) {

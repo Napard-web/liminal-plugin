@@ -1,8 +1,9 @@
-import { App, Modal, Notice, Plugin, TFile, TFolder, moment } from "obsidian";
+import { App, Notice, Plugin, TFile, TFolder, moment } from "obsidian";
 import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
 import { recupererTranscription } from "./video";
+import { TextInputModal, ConfirmModal, ResultatsModal, NotePreviewModal, TraiterNoteModal } from "./modals";
 
 export default class LiminalPlugin extends Plugin {
   settings: LiminalSettings;
@@ -508,10 +509,9 @@ ${listeFiltrée}`,
             2048
           );
           notice.hide();
-          new ConfirmModal(
+          new TraiterNoteModal(
             this.app,
-            "Aperçu disponible dans la console. Remplacer le contenu de la note ?",
-            "Appliquer le résultat ?",
+            resultat,
             async () => {
               await this.modifierNote(file, resultat);
               new Notice("Note mise à jour.");
@@ -526,150 +526,3 @@ ${listeFiltrée}`,
   }
 }
 
-// ─── Modals ──────────────────────────────────────────────────────────────────
-
-class TextInputModal extends Modal {
-  private label: string;
-  private placeholder: string;
-  private multiline: boolean;
-  private onSubmit: (value: string) => void;
-
-  constructor(app: App, label: string, placeholder: string, multiline: boolean, onSubmit: (value: string) => void) {
-    super(app);
-    this.label = label;
-    this.placeholder = placeholder;
-    this.multiline = multiline;
-    this.onSubmit = onSubmit;
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: this.label });
-
-    let value = "";
-    if (this.multiline) {
-      const ta = contentEl.createEl("textarea", { attr: { placeholder: this.placeholder, rows: "10", style: "width:100%;resize:vertical;" } });
-      ta.addEventListener("input", () => (value = ta.value));
-    } else {
-      const input = contentEl.createEl("input", { attr: { type: "text", placeholder: this.placeholder, style: "width:100%;" } });
-      input.addEventListener("input", () => (value = input.value));
-    }
-
-    const btn = contentEl.createEl("button", { text: "Valider", attr: { style: "margin-top:12px;" } });
-    btn.addEventListener("click", () => {
-      this.close();
-      this.onSubmit(value);
-    });
-  }
-
-  onClose() {
-    this.contentEl.empty();
-  }
-}
-
-class ConfirmModal extends Modal {
-  private message: string;
-  private titre: string;
-  private onConfirm: () => void;
-
-  constructor(app: App, message: string, titre: string, onConfirm: () => void) {
-    super(app);
-    this.message = message;
-    this.titre = titre;
-    this.onConfirm = onConfirm;
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: this.titre });
-    contentEl.createEl("p", { text: this.message });
-
-    const row = contentEl.createDiv({ attr: { style: "display:flex;gap:8px;margin-top:12px;" } });
-    const btnOui = row.createEl("button", { text: "Oui" });
-    const btnNon = row.createEl("button", { text: "Non" });
-
-    btnOui.addEventListener("click", () => { this.close(); this.onConfirm(); });
-    btnNon.addEventListener("click", () => this.close());
-  }
-
-  onClose() {
-    this.contentEl.empty();
-  }
-}
-
-class ResultatsModal extends Modal {
-  private titre: string;
-  private texte: string;
-  private fichiers: TFile[];
-
-  constructor(app: App, titre: string, texte: string, fichiers: TFile[]) {
-    super(app);
-    this.titre = titre;
-    this.texte = texte;
-    this.fichiers = fichiers;
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: this.titre });
-    this.fichiers.forEach((f, i) => {
-      const ligne = contentEl.createDiv({ attr: { style: "margin:4px 0;" } });
-      const score = this.texte.split("\n")[i]?.split("—")[0]?.trim() ?? "";
-      ligne.createEl("span", { text: `${score} `, attr: { style: "color:var(--text-muted);font-size:12px;" } });
-      const lien = ligne.createEl("a", { text: f.basename, attr: { style: "cursor:pointer;" } });
-      lien.addEventListener("click", () => {
-        this.app.workspace.getLeaf().openFile(f);
-        this.close();
-      });
-    });
-  }
-
-  onClose() {
-    this.contentEl.empty();
-  }
-}
-
-class NotePreviewModal extends Modal {
-  private contenu: string;
-  private dossiers: string[];
-  private onSave: (contenu: string, dossier: string, nom: string) => void;
-
-  constructor(app: App, contenu: string, dossiers: string[], onSave: (contenu: string, dossier: string, nom: string) => void) {
-    super(app);
-    this.contenu = contenu;
-    this.dossiers = dossiers;
-    this.onSave = onSave;
-  }
-
-  onOpen() {
-    const { contentEl } = this;
-    contentEl.createEl("h3", { text: "Note générée — aperçu" });
-
-    const pre = contentEl.createEl("pre", { attr: { style: "max-height:300px;overflow:auto;background:var(--background-secondary);padding:8px;border-radius:4px;white-space:pre-wrap;font-size:12px;" } });
-    pre.textContent = this.contenu;
-
-    contentEl.createEl("hr");
-
-    // Sélecteur de dossier
-    contentEl.createEl("label", { text: "Dossier :" });
-    const select = contentEl.createEl("select", { attr: { style: "width:100%;margin-bottom:8px;" } });
-    select.createEl("option", { value: "", text: "(racine du vault)" });
-    this.dossiers.forEach((d) => select.createEl("option", { value: d, text: d }));
-
-    // Nom de fichier
-    contentEl.createEl("label", { text: "Nom de la note :" });
-    const input = contentEl.createEl("input", { attr: { type: "text", placeholder: "nom-de-la-note", style: "width:100%;margin-bottom:12px;" } });
-
-    const btn = contentEl.createEl("button", { text: "Sauvegarder" });
-    btn.addEventListener("click", () => {
-      const nom = input.value.trim().replace(/\.md$/, "");
-      if (!nom) { new Notice("Donne un nom à la note."); return; }
-      this.close();
-      this.onSave(this.contenu, select.value, nom);
-    });
-  }
-
-  onClose() {
-    this.contentEl.empty();
-  }
-}
