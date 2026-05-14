@@ -414,7 +414,7 @@ ${listeFiltrée}`,
           let transcription: string;
           try {
             transcription = await recupererTranscription(url.trim());
-          } catch (e) {
+          } catch (_) {
             notice.hide();
             // Fallback : coller la transcription manuellement
             new TextInputModal(
