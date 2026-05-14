@@ -44,7 +44,7 @@ export async function recupererTranscription(url: string): Promise<string> {
     body: JSON.stringify({ videoId, context: INNERTUBE_CONTEXT }),
   });
 
-  const playerData = JSON.parse(playerResp.text) as PlayerResponse;
+  const playerData = JSON.parse(playerResp.text) as unknown as PlayerResponse;
   const tracks: CaptionTrack[] =
     playerData?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [];
 
