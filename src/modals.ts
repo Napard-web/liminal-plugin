@@ -90,7 +90,7 @@ export class ResultatsModal extends Modal {
       ligne.createEl("span", { text: `${score} `, attr: { style: "color:var(--text-muted);font-size:12px;" } });
       const lien = ligne.createEl("a", { text: f.basename, attr: { style: "cursor:pointer;" } });
       lien.addEventListener("click", () => {
-        this.app.workspace.getLeaf().openFile(f);
+        void this.app.workspace.getLeaf().openFile(f);
         this.close();
       });
     });
