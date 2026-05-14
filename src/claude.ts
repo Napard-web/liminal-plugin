@@ -45,7 +45,7 @@ export async function appelClaude(
         if (essai === maxEssais) {
           throw new AppelClaudeEchoue(`Échec après ${maxEssais} essais : ${e}`);
         }
-        await new Promise((r) => setTimeout(r, delai));
+        await new Promise((r) => window.setTimeout(r, delai));
         delai *= 2;
       } else {
         throw e;
