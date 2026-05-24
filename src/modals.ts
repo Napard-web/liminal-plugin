@@ -175,3 +175,35 @@ export class TraiterNoteModal extends Modal {
     this.contentEl.empty();
   }
 }
+
+export class SelectFolderModal extends Modal {
+  private titre: string;
+  private dossiers: string[];
+  private onSelect: (dossier: string) => void | Promise<void>;
+
+  constructor(app: App, titre: string, dossiers: string[], onSelect: (dossier: string) => void | Promise<void>) {
+    super(app);
+    this.titre = titre;
+    this.dossiers = dossiers;
+    this.onSelect = onSelect;
+  }
+
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.createEl("h3", { text: this.titre });
+
+    const select = contentEl.createEl("select", { attr: { style: "width:100%;margin-bottom:12px;" } });
+    select.createEl("option", { value: "", text: "(racine du vault)" });
+    this.dossiers.forEach((d) => select.createEl("option", { value: d, text: d }));
+
+    const btn = contentEl.createEl("button", { text: "Déplacer" });
+    btn.addEventListener("click", () => {
+      this.close();
+      void Promise.resolve(this.onSelect(select.value));
+    });
+  }
+
+  onClose() {
+    this.contentEl.empty();
+  }
+}

@@ -3,7 +3,7 @@ import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
 import { recupererTranscription } from "./video";
-import { TextInputModal, ConfirmModal, ResultatsModal, NotePreviewModal, TraiterNoteModal } from "./modals";
+import { TextInputModal, ConfirmModal, ResultatsModal, NotePreviewModal, TraiterNoteModal, SelectFolderModal } from "./modals";
 
 export default class LiminalPlugin extends Plugin {
   settings: LiminalSettings;
@@ -60,6 +60,24 @@ export default class LiminalPlugin extends Plugin {
       id: "supprimer-note",
       name: "Supprimer la note active",
       callback: () => this.cmdSupprimerNote(),
+    });
+
+    this.addCommand({
+      id: "renommer-note",
+      name: "Renommer la note active",
+      callback: () => this.cmdRenommerNote(),
+    });
+
+    this.addCommand({
+      id: "deplacer-note",
+      name: "Déplacer la note active vers un autre dossier",
+      callback: () => this.cmdDeplacerNote(),
+    });
+
+    this.addCommand({
+      id: "dupliquer-note",
+      name: "Dupliquer la note active",
+      callback: () => this.cmdDupliquerNote(),
     });
   }
 
@@ -503,6 +521,54 @@ ${listeFiltrée}`,
         new Notice(`Note "${file.basename}" supprimée.`);
       }
     ).open();
+  }
+
+  private cmdRenommerNote() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    new TextInputModal(
+      this.app,
+      "Nouveau nom de la note",
+      file.basename,
+      false,
+      async (nouveauNom) => {
+        const nom = nouveauNom.trim().replace(/\.md$/, "");
+        if (!nom || nom === file.basename) return;
+        const nouveauChemin = file.parent ? `${file.parent.path}/${nom}.md` : `${nom}.md`;
+        await this.app.fileManager.renameFile(file, nouveauChemin);
+        new Notice(`Note renommée en "${nom}".`);
+      }
+    ).open();
+  }
+
+  private cmdDeplacerNote() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    const dossiers = this.listerDossiers();
+    new SelectFolderModal(
+      this.app,
+      `Déplacer "${file.basename}"`,
+      dossiers,
+      async (dossier) => {
+        const cible = dossier ? `${dossier}/${file.basename}.md` : `${file.basename}.md`;
+        await this.app.fileManager.renameFile(file, cible);
+        new Notice(`Note déplacée vers "${dossier || "racine"}".`);
+      }
+    ).open();
+  }
+
+  private async cmdDupliquerNote() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    const contenu = await this.lireNote(file);
+    const dossier = file.parent?.path ?? "";
+    const nomCopie = `${file.basename} - copie`;
+    const chemin = dossier ? `${dossier}/${nomCopie}.md` : `${nomCopie}.md`;
+    await this.app.vault.create(chemin, contenu);
+    new Notice(`Note dupliquée : "${nomCopie}".`);
   }
 
   private cmdTraiterNote() {
