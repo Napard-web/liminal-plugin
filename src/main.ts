@@ -55,6 +55,12 @@ export default class LiminalPlugin extends Plugin {
       name: "Créer un nouveau dossier",
       callback: () => this.cmdCreerDossier(),
     });
+
+    this.addCommand({
+      id: "supprimer-note",
+      name: "Supprimer la note active",
+      callback: () => this.cmdSupprimerNote(),
+    });
   }
 
   async loadSettings() {
@@ -480,6 +486,21 @@ ${listeFiltrée}`,
         if (existant) { new Notice(`Le dossier '${chemin}' existe déjà.`); return; }
         await this.app.vault.createFolder(chemin);
         new Notice(`Dossier '${chemin}' créé.`);
+      }
+    ).open();
+  }
+
+  private cmdSupprimerNote() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    new ConfirmModal(
+      this.app,
+      `Supprimer définitivement "${file.basename}" ?`,
+      "Supprimer la note",
+      async () => {
+        await this.app.vault.delete(file);
+        new Notice(`Note "${file.basename}" supprimée.`);
       }
     ).open();
   }
