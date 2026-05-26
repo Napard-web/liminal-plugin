@@ -86,6 +86,7 @@ Liminal fetches the video transcript automatically. If the transcript is blocked
 - Your API key is stored locally in your vault's plugin data
 - Note content is sent to the Anthropic API only when you trigger a command
 - No analytics, no telemetry, no external servers beyond Anthropic
+- **Vault access**: the plugin enumerates all markdown file paths in your vault to power link suggestions and semantic search. File paths are used locally for filtering; only the content of the active note (and up to 15 candidate notes for link suggestions) is ever sent to the Anthropic API.
 
 ---
 
