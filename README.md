@@ -21,6 +21,7 @@
 | **Rename active note** | Rename the current note without leaving the editor |
 | **Move active note** | Move the current note to another folder in your vault |
 | **Duplicate active note** | Create a copy of the current note with a "- copie" suffix |
+| **Detect similar notes** | Find notes in your vault that share significant content with the active note |
 
 All commands are accessible from the Command Palette (`Ctrl+P` / `Cmd+P`).
 

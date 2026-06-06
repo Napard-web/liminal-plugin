@@ -79,6 +79,12 @@ export default class LiminalPlugin extends Plugin {
       name: "Dupliquer la note active",
       callback: () => this.cmdDupliquerNote(),
     });
+
+    this.addCommand({
+      id: "detecter-doublons",
+      name: "Détecter les notes similaires",
+      callback: () => this.cmdDetecterDoublons(),
+    });
   }
 
   async loadSettings() {
@@ -569,6 +575,41 @@ ${listeFiltrée}`,
     const chemin = dossier ? `${dossier}/${nomCopie}.md` : `${nomCopie}.md`;
     await this.app.vault.create(chemin, contenu);
     new Notice(`Note dupliquée : "${nomCopie}".`);
+  }
+
+  private async cmdDetecterDoublons() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    const notice = new Notice("Liminal : analyse des similarités…", 0);
+    try {
+      const contenu = await this.lireNote(file);
+      const resultats = await this.semantique.rechercherTopN(contenu, 10);
+      notice.hide();
+
+      const SEUIL = 3;
+      const similaires = resultats.filter(
+        (r) => r.file.path !== file.path && r.score >= SEUIL
+      );
+
+      if (!similaires.length) {
+        new Notice("Liminal : aucune note similaire trouvée.");
+        return;
+      }
+
+      const texte = similaires
+        .map((r) => `${r.score} mots en commun — ${r.file.path}`)
+        .join("\n");
+      new ResultatsModal(
+        this.app,
+        `Notes similaires à "${file.basename}"`,
+        texte,
+        similaires.map((r) => r.file)
+      ).open();
+    } catch (e) {
+      notice.hide();
+      new Notice(`Liminal : erreur — ${e instanceof Error ? e.message : e}`);
+    }
   }
 
   private cmdTraiterNote() {
