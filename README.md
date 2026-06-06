@@ -91,6 +91,12 @@ Liminal fetches the video transcript automatically. If the transcript is blocked
 
 ---
 
+## Feedback & Support
+
+Found a bug? Have a feature request? [Open an issue on GitHub](https://github.com/Napard-web/liminal-plugin/issues) — all feedback is welcome.
+
+---
+
 ## License
 
 [MIT](LICENSE) © 2026 Arnaud Delpech
