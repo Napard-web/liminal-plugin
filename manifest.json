@@ -2,7 +2,7 @@
   "id": "liminal",
   "name": "Liminal",
   "version": "1.0.5",
-  "minAppVersion": "1.4.0",
+  "minAppVersion": "1.7.0",
   "description": "AI-powered note assistant — generate structured notes, suggest tags & links, summarize YouTube videos. Bring Your Own Key (Anthropic Claude).",
   "author": "Arnaud Delpech",
   "authorUrl": "https://github.com/Napard-web",
