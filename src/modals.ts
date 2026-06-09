@@ -30,7 +30,7 @@ export class TextInputModal extends Modal {
     const btn = contentEl.createEl("button", { text: "Valider", attr: { style: "margin-top:12px;" } });
     btn.addEventListener("click", () => {
       this.close();
-      this.onSubmit(value);
+      void Promise.resolve(this.onSubmit(value));
     });
   }
 
@@ -60,7 +60,7 @@ export class ConfirmModal extends Modal {
     const btnOui = row.createEl("button", { text: "Oui" });
     const btnNon = row.createEl("button", { text: "Non" });
 
-    btnOui.addEventListener("click", () => { this.close(); this.onConfirm(); });
+    btnOui.addEventListener("click", () => { this.close(); void Promise.resolve(this.onConfirm()); });
     btnNon.addEventListener("click", () => this.close());
   }
 
@@ -135,7 +135,7 @@ export class NotePreviewModal extends Modal {
       const nom = input.value.trim().replace(/\.md$/, "");
       if (!nom) { new Notice("Donne un nom à la note."); return; }
       this.close();
-      this.onSave(this.contenu, select.value, nom);
+      void Promise.resolve(this.onSave(this.contenu, select.value, nom));
     });
   }
 
@@ -167,7 +167,7 @@ export class TraiterNoteModal extends Modal {
     const btnOui = row.createEl("button", { text: "Appliquer" });
     const btnNon = row.createEl("button", { text: "Annuler" });
 
-    btnOui.addEventListener("click", () => { this.close(); this.onConfirm(); });
+    btnOui.addEventListener("click", () => { this.close(); void Promise.resolve(this.onConfirm()); });
     btnNon.addEventListener("click", () => this.close());
   }
 

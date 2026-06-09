@@ -1,4 +1,4 @@
-import { App, Notice, Plugin, TFile, TFolder, moment } from "obsidian";
+import { Notice, Plugin, TFile, TFolder, moment } from "obsidian";
 import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
@@ -444,7 +444,7 @@ ${listeFiltrée}`,
           let transcription: string;
           try {
             transcription = await recupererTranscription(url.trim());
-          } catch (_) {
+          } catch {
             notice.hide();
             // Fallback : coller la transcription manuellement
             new TextInputModal(
@@ -520,10 +520,10 @@ ${listeFiltrée}`,
 
     new ConfirmModal(
       this.app,
-      `Supprimer définitivement "${file.basename}" ?`,
+      `Supprimer "${file.basename}" ?`,
       "Supprimer la note",
       async () => {
-        await this.app.vault.delete(file);
+        await this.app.fileManager.trashFile(file);
         new Notice(`Note "${file.basename}" supprimée.`);
       }
     ).open();
