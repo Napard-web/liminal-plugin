@@ -2,7 +2,6 @@ import { Notice, Plugin, TFile, TFolder, moment } from "obsidian";
 import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
-import { recupererTranscription } from "./video";
 import { TextInputModal, ConfirmModal, ResultatsModal, NotePreviewModal, TraiterNoteModal, SelectFolderModal } from "./modals";
 
 export default class LiminalPlugin extends Plugin {
@@ -434,50 +433,17 @@ ${listeFiltrée}`,
     if (!this.verifierApiKey()) return;
     new TextInputModal(
       this.app,
-      "URL YouTube",
-      "https://www.youtube.com/watch?v=...",
-      false,
-      async (url) => {
-        if (!url.trim()) return;
-        const notice = new Notice("Liminal : récupération de la transcription…", 0);
+      "Colle la transcription YouTube",
+      "Colle ici le texte de la vidéo…",
+      true,
+      async (texte) => {
+        if (!texte.trim()) return;
+        const notice = new Notice("Liminal : génération de la note…", 0);
         try {
-          let transcription: string;
-          try {
-            transcription = await recupererTranscription(url.trim());
-          } catch {
-            notice.hide();
-            // Fallback : coller la transcription manuellement
-            new TextInputModal(
-              this.app,
-              "Sous-titres introuvables — colle la transcription manuellement",
-              "Colle ici le texte de la vidéo…",
-              true,
-              async (texte) => {
-                if (!texte.trim()) return;
-                const n2 = new Notice("Liminal : génération de la note…", 0);
-                try {
-                  const note = await this.genererNoteDepuisVideo(`Source : ${url}\n\n${texte}`);
-                  n2.hide();
-                  new NotePreviewModal(this.app, note, this.listerDossiers(), async (contenu, dossier, nom) => {
-                    const chemin = dossier ? `${dossier}/${nom}.md` : `${nom}.md`;
-                    const existant = this.app.vault.getAbstractFileByPath(chemin);
-                    if (existant instanceof TFile) await this.modifierNote(existant, contenu);
-                    else await this.app.vault.create(chemin, contenu);
-                    new Notice(`Note '${nom}' créée.`);
-                  }).open();
-                } catch (err) {
-                  n2.hide();
-                  new Notice(`Liminal : erreur — ${err instanceof Error ? err.message : err}`);
-                }
-              }
-            ).open();
-            return;
-          }
-          notice.setMessage("Liminal : génération de la note…");
           const MAX_MOTS = 15_000;
-          const mots = transcription.split(" ");
-          const texte = (mots.length > MAX_MOTS ? mots.slice(0, MAX_MOTS).join(" ") : transcription);
-          const noteGeneree = await this.genererNoteDepuisVideo(`Source : ${url}\n\n${texte}`);
+          const mots = texte.trim().split(" ");
+          const contenuTronque = mots.length > MAX_MOTS ? mots.slice(0, MAX_MOTS).join(" ") : texte.trim();
+          const noteGeneree = await this.genererNoteDepuisVideo(contenuTronque);
           notice.hide();
           new NotePreviewModal(this.app, noteGeneree, this.listerDossiers(), async (contenu, dossier, nom) => {
             const chemin = dossier ? `${dossier}/${nom}.md` : `${nom}.md`;

@@ -15,7 +15,7 @@
 | **Suggest links** | Finds up to 3 semantically related notes in your vault and proposes `[[wikilinks]]` |
 | **Process note with instruction** | Run any free-form instruction on the active note (translate, summarize, rewrite…) |
 | **Semantic search** | Search your vault by meaning, not just keywords |
-| **Generate note from YouTube** | Paste a YouTube URL → retrieves the transcript and generates a structured note |
+| **Generate note from YouTube** | Paste a YouTube transcript → generates a structured note with key ideas and quotes |
 | **Create folder** | Create a new folder anywhere in your vault |
 | **Delete active note** | Delete the current note with a confirmation prompt |
 | **Rename active note** | Rename the current note without leaving the editor |
