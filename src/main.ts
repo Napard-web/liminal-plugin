@@ -1,4 +1,4 @@
-import { Notice, Plugin, TFile, TFolder, moment } from "obsidian";
+import { Menu, Notice, Plugin, TFile, TFolder, moment } from "obsidian";
 import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
@@ -12,6 +12,20 @@ export default class LiminalPlugin extends Plugin {
     await this.loadSettings();
     this.addSettingTab(new LiminalSettingTab(this.app, this));
     this.semantique = new RechercheSemantiqueService(this.app);
+
+    this.addRibbonIcon("bot", "Liminal", (evt: MouseEvent) => {
+      if (!this.settings.apiKey) {
+        new Notice("Liminal : configure ta clé API dans les settings du plugin.");
+        return;
+      }
+      const menu = new Menu();
+      menu.addItem((item) => item.setTitle("Générer une note").setIcon("file-plus").onClick(() => this.cmdGenererNote()));
+      menu.addItem((item) => item.setTitle("Suggérer des tags").setIcon("tag").onClick(() => this.cmdSuggererTags()));
+      menu.addItem((item) => item.setTitle("Suggérer des liens").setIcon("link").onClick(() => this.cmdSuggererLiens()));
+      menu.addItem((item) => item.setTitle("Recherche sémantique").setIcon("search").onClick(() => this.cmdRechercheSemantiqueque()));
+      menu.addItem((item) => item.setTitle("Traiter la note").setIcon("wand-2").onClick(() => this.cmdTraiterNote()));
+      menu.showAtMouseEvent(evt);
+    });
 
     this.addCommand({
       id: "generer-note",
@@ -83,6 +97,12 @@ export default class LiminalPlugin extends Plugin {
       id: "detecter-doublons",
       name: "Détecter les notes similaires",
       callback: () => this.cmdDetecterDoublons(),
+    });
+
+    this.addCommand({
+      id: "nettoyer-liens-morts",
+      name: "Nettoyer les liens morts de la note active",
+      callback: () => this.cmdNettoyerLiensMorts(),
     });
   }
 
@@ -576,6 +596,42 @@ ${listeFiltrée}`,
       notice.hide();
       new Notice(`Liminal : erreur — ${e instanceof Error ? e.message : e}`);
     }
+  }
+
+  private async cmdNettoyerLiensMorts() {
+    const file = this.app.workspace.getActiveFile();
+    if (!file) { new Notice("Liminal : aucune note active."); return; }
+
+    const contenu = await this.lireNote(file);
+    const notesExistantes = new Set(
+      this.app.vault.getMarkdownFiles().map((f) => f.basename.toLowerCase())
+    );
+
+    const liensDetectes: string[] = [];
+    const contenuNettoye = contenu.split(/(\[\[[^\]]+\]\])/).map((part) => {
+      if (!part.startsWith("[[")) return part;
+      const nom = part.slice(2, -2).split("|")[0].trim();
+      if (!notesExistantes.has(nom.toLowerCase())) {
+        liensDetectes.push(part);
+        return "";
+      }
+      return part;
+    }).join("");
+
+    if (!liensDetectes.length) {
+      new Notice("Liminal : aucun lien mort trouvé.");
+      return;
+    }
+
+    new ConfirmModal(
+      this.app,
+      `${liensDetectes.length} lien(s) mort(s) trouvé(s) : ${liensDetectes.join(", ")}. Les supprimer ?`,
+      "Nettoyer les liens morts",
+      async () => {
+        await this.modifierNote(file, contenuNettoye);
+        new Notice(`${liensDetectes.length} lien(s) mort(s) supprimé(s).`);
+      }
+    ).open();
   }
 
   private cmdTraiterNote() {

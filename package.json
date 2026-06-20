@@ -1,6 +1,6 @@
 {
   "name": "liminal",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Assistant de notes intelligent pour Obsidian",
   "main": "main.js",
   "scripts": {
