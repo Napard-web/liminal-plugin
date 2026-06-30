@@ -1,4 +1,4 @@
-import { Menu, Notice, Plugin, TFile, TFolder, moment } from "obsidian";
+import { Menu, Notice, Plugin, TFile, TFolder, requestUrl } from "obsidian";
 import { appelClaude, AppelClaudeEchoue } from "./claude";
 import { DEFAULT_SETTINGS, LiminalSettingTab, LiminalSettings } from "./settings";
 import { RechercheSemantiqueService } from "./semantic";
@@ -132,9 +132,9 @@ export default class LiminalPlugin extends Plugin {
 
   private async checkForUpdates() {
     try {
-      const resp = await fetch("https://api.github.com/repos/Napard-web/liminal-plugin/releases/latest");
-      if (!resp.ok) return;
-      const data = await resp.json() as { tag_name?: string };
+      const resp = await requestUrl("https://api.github.com/repos/Napard-web/liminal-plugin/releases/latest");
+      if (resp.status !== 200) return;
+      const data = resp.json as { tag_name?: string };
       const latest = data.tag_name?.replace(/^v/, "");
       if (latest && latest !== this.manifest.version) {
         new Notice(
@@ -150,7 +150,10 @@ export default class LiminalPlugin extends Plugin {
   // ─── Utilitaires vault ───────────────────────────────────────────────────
 
   private dateAujourdhui(): string {
-    return moment().format("DD/MM/YYYY");
+    const d = new Date();
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    return `${dd}/${mm}/${d.getFullYear()}`;
   }
 
   private listerNotes(): string {
