@@ -30,6 +30,7 @@ function scorerNote(contenu: string, motsCles: string[]): number {
 
 export class RechercheSemantiqueService {
   private app: App;
+  private cache = new Map<string, { mtime: number; contenu: string }>();
 
   constructor(app: App) {
     this.app = app;
@@ -43,7 +44,13 @@ export class RechercheSemantiqueService {
 
     const scores: { file: TFile; score: number }[] = [];
     for (const note of notes) {
-      const contenu = await this.app.vault.cachedRead(note);
+      const cached = this.cache.get(note.path);
+      const contenu = cached && cached.mtime === note.stat.mtime
+        ? cached.contenu
+        : await this.app.vault.cachedRead(note);
+      if (!cached || cached.mtime !== note.stat.mtime) {
+        this.cache.set(note.path, { mtime: note.stat.mtime, contenu });
+      }
       const score = scorerNote(contenu, motsCles);
       if (score > 0) scores.push({ file: note, score });
     }

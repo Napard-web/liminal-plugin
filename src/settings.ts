@@ -48,6 +48,7 @@ export class LiminalSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.model = value;
             await this.plugin.saveSettings();
+            this.plugin.updateStatusBar();
           })
       );
   }

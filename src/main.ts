@@ -7,11 +7,15 @@ import { TextInputModal, ConfirmModal, ResultatsModal, NotePreviewModal, Traiter
 export default class LiminalPlugin extends Plugin {
   settings: LiminalSettings;
   semantique: RechercheSemantiqueService;
+  private statusBarItem!: HTMLElement;
 
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new LiminalSettingTab(this.app, this));
     this.semantique = new RechercheSemantiqueService(this.app);
+
+    this.statusBarItem = this.addStatusBarItem();
+    this.updateStatusBar();
 
     this.addRibbonIcon("bot", "Liminal", (evt: MouseEvent) => {
       if (!this.settings.apiKey) {
@@ -104,6 +108,8 @@ export default class LiminalPlugin extends Plugin {
       name: "Nettoyer les liens morts de la note active",
       callback: () => this.cmdNettoyerLiensMorts(),
     });
+
+    void this.checkForUpdates();
   }
 
   async loadSettings() {
@@ -112,6 +118,33 @@ export default class LiminalPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  updateStatusBar() {
+    const noms: Record<string, string> = {
+      "claude-sonnet-4-6": "Sonnet 4.6",
+      "claude-opus-4-7": "Opus 4.7",
+      "claude-haiku-4-5-20251001": "Haiku 4.5",
+    };
+    const nom = noms[this.settings.model] ?? this.settings.model;
+    this.statusBarItem.setText(`Liminal · ${nom}`);
+  }
+
+  private async checkForUpdates() {
+    try {
+      const resp = await fetch("https://api.github.com/repos/Napard-web/liminal-plugin/releases/latest");
+      if (!resp.ok) return;
+      const data = await resp.json() as { tag_name?: string };
+      const latest = data.tag_name?.replace(/^v/, "");
+      if (latest && latest !== this.manifest.version) {
+        new Notice(
+          `Liminal : version ${latest} disponible — mettez à jour dans Paramètres → Extensions tierces.`,
+          10000
+        );
+      }
+    } catch {
+      // fail silently
+    }
   }
 
   // ─── Utilitaires vault ───────────────────────────────────────────────────
@@ -188,23 +221,23 @@ export default class LiminalPlugin extends Plugin {
       [
         {
           role: "user",
-          content: `Tu es Liminal, un assistant qui structure des notes approfondies pour un vault Obsidian.
+          content: `Tu es Liminal, un assistant qui structure des notes de pensée approfondies pour un vault Obsidian.
 
-À partir du texte brut ci-dessous, génère une note complète et approfondie en markdown.
+À partir du texte brut ci-dessous, génère une note complète en markdown. L'objectif est une note qui sera utile dans 6 mois — dense, analytique, pas encyclopédique.
 
 Structure attendue :
 
 # Titre
-(titre précis qui reflète le sujet central)
+(titre précis et évocateur — reflète l'angle, pas juste le sujet)
 
 ## Résumé
-(3-5 phrases : idée principale, angle, pourquoi ça compte)
+(3-5 phrases : thèse principale, angle original, pourquoi ça compte maintenant)
 
 ## Idées clés
-(liste de 4 à 6 bullet points — une idée forte par bullet, formulée comme une affirmation)
+(5 à 7 bullet points — chaque bullet est une affirmation forte et non-évidente, pas une description)
 
 ## Contenu
-(développement structuré avec sous-sections ### si plusieurs axes. Minimum 200 mots. Développe les arguments, les nuances, les implications — ne résume pas.)
+(développement structuré avec ### si plusieurs axes. Minimum 250 mots. Développe les arguments, les tensions, les nuances et les implications concrètes. Connecte avec des concepts plus larges si pertinent. Ne résume pas — pense.)
 
 ## Tags
 (2 ou 3 tags format #tag, pas plus)
@@ -234,23 +267,24 @@ Réponds uniquement avec le contenu markdown de la note, rien d'autre.`,
       [
         {
           role: "user",
-          content: `Tu es Liminal, un assistant qui structure des notes approfondies pour un vault Obsidian.
+          content: `Tu es Liminal, un assistant qui structure des notes de pensée approfondies pour un vault Obsidian.
 
-À partir de la transcription ci-dessous, génère une note complète en markdown.
+À partir de la transcription ci-dessous, génère une note complète en markdown. L'objectif est une note dense et analytique — pas un résumé, une distillation.
 
 # Titre
+(titre précis et évocateur — reflète l'angle, pas juste le sujet)
 
 ## Résumé
-(3-5 phrases : thèse principale, angle, pourquoi ça compte)
+(3-5 phrases : thèse principale, angle original, pourquoi ça compte)
 
 ## Idées clés
-(5 à 8 bullet points — une affirmation forte par bullet)
+(6 à 8 bullet points — chaque bullet est une affirmation forte et non-évidente, pas une description)
 
 ## Contenu
-(développement structuré avec ### si plusieurs axes. Minimum 300 mots. Développe, ne résume pas.)
+(développement structuré avec ### si plusieurs axes. Minimum 350 mots. Développe les arguments, les tensions, les nuances et les implications. Connecte avec des concepts plus larges si pertinent. Pense, ne résume pas.)
 
 ## Citations notables
-(2 à 4 extraits directs ou paraphrases proches)
+(2 à 4 extraits directs ou paraphrases proches — les formulations qui méritent d'être gardées mot pour mot)
 
 ## Tags
 (2 ou 3 tags format #tag, pas plus)
